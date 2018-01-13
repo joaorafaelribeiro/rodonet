@@ -3,16 +3,21 @@
 namespace App\Admin\Controllers;
 
 use App\Veiculo;
+use App\Assento;
 use App\TipoVeiculo;
 use App\TipoCombustivel;
+
+use Illuminate\Http\Request;
 
 use Encore\Admin\Form;
 use Encore\Admin\Grid;
 use Encore\Admin\Facades\Admin;
 use Encore\Admin\Layout\Content;
 use Encore\Admin\Widgets\Tab;
+use Encore\Admin\Widgets\Table;
 use App\Http\Controllers\Controller;
 use Encore\Admin\Controllers\ModelForm;
+use Illuminate\Support\MessageBag;
 
 class VeiculoController extends Controller
 {
@@ -53,7 +58,28 @@ class VeiculoController extends Controller
                 ['text' => 'Veículos', 'url' => '/veiculos'],
                 ['text' => 'Editando']
             );
-            $content->body($this->form()->edit($id));
+            $grid = Admin::grid(Assento::class, function(Grid $grid) use ($id) {
+                $grid->model()->where('veiculo_id','=',$id)->orderBy('nome');
+                $grid->column('nome','local')->editable();
+                $states = [
+                    'on'  => ['value' => 1, 'text' => 'Sim', 'color' => 'primary'],
+                    'off' => ['value' => 0, 'text' => 'Não', 'color' => 'danger'],
+                ];
+                $grid->janela()->switch($states);
+                $grid->paginate(20);
+                $grid->disableFilter();
+                $grid->disableExport();
+                $grid->disableRowSelector();
+                $grid->disablePagination();
+                $grid->actions(function ($actions) {
+                    $actions->disableEdit();
+                });
+                
+            });
+            $tab = new Tab();
+            $tab->add('Veículo',$this->form()->edit($id));
+            $tab->add('Assentos',$grid);
+            $content->body($tab);
         });
     }
 
@@ -107,17 +133,11 @@ class VeiculoController extends Controller
     protected function form()
     {
         return Admin::form(Veiculo::class, function (Form $form) {
-            // $tab = new Tab();
-            // $tab->add('Veículo',$form);
             $form->tools(function (Form\Tools $tools) {
-
-                // Disable back btn.
                 $tools->disableBackButton();
-            
             });
             $form->disableReset();
-            $form->tab('Veículo',function(Form $form){
-                $form->hidden('id');
+            $form->hidden('id');
                 $form->text('placa' )->rules('required|regex:/\w\w\w-\d\d\d\d/',[
                     'regex' => 'Formato é AAA-9999'
                 ]);
@@ -127,15 +147,42 @@ class VeiculoController extends Controller
                 $form->text('renavam'   )->rules('required');
                 $form->select('tipo_veiculo_id',  'Tipo' )->options(TipoVeiculo::all()->pluck('nome','id'))->rules('required');
                 $form->select('tipo_combustivel_id',  'Combustível' )->options(TipoCombustivel::all()->pluck('nome','id'))->rules('required');
-        
-            });
-            $form->tab('Assentos',function(Form $form){
-                $form->hasMany('assentos', function (Form\NestedForm $form) {
-                    $form->text('nome','Local');
-                    $form->radio('janela', 'Janela?')->options([1 => 'Sim', 0 => 'Não']);
-                });
-            });
-            
         });
     }
+
+    public function updateAssento($veiculo_id, $assento_id, Request $request) {
+        $assento = Assento::find($assento_id);
+        $assento->fill($request->all());
+        if($request->get('janela')) {
+            $assento->janela = ($request->get('janela') == 'on');
+        }
+        $assento->save();
+        return new MessageBag([
+            'title'   => 'title...',
+            'message' => 'Assento atualizado',
+        ]);
+    }
+
+    public function deleteAssento($veiculo_id, $assento_id, Request $request) {
+        $assento = Assento::find($assento_id);
+        $assento->delete();
+        return new MessageBag([
+            'title'   => 'title...',
+            'message' => 'Assento excluído',
+        ]);
+    }
+
+    public function createAssento($veiculo_id, Request $request) {
+        $assento = new Assento();
+        $assento->veiculo_id = $veiculo_id;
+        $assento->nome = '##';
+        $assento->janela = true;
+        $assento->save();
+        $success = new MessageBag([
+            'title'   => 'Novo assento cadastrado',
+            //'message' => 'Operação realizada com sucesso',
+        ]);    
+        return back()->with(compact('success'));
+    }
+
 }
