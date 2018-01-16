@@ -15,6 +15,7 @@ use Illuminate\Http\Request;
 Route::get('/cidade','CidadeController@list');
 Route::get('/pessoa','PessoaController@list');
 Route::get('/viagem','ViagemController@list');
+Route::get('/assentos','AssentoController@list');
 
 Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();

@@ -50,8 +50,10 @@ class ViagemController extends Controller
             $content->header('header');
             $content->description('description');
             $tab = new Tab();
-            $rows = Bilhete::join('pessoas','pessoas.id','=','pessoa_id')->where('viagem_id','=',$id)
-            ->select('pessoas.cpf','pessoas.nome','pessoas.data_nascimento','assento')->get();
+            $rows = Bilhete::where('viagem_id','=',$id)
+            ->join('pessoas','pessoas.id','=','pessoa_id')
+            ->join('assentos','assentos.id','=','assento_id')
+            ->select('pessoas.cpf','pessoas.nome','pessoas.data_nascimento','assentos.nome')->get();
             
             //$rows = array_pluck($rows,['cpf','nome','data_nascimento','assento']);
             $table = new Table(['CPF', 'Name', 'Idade', 'Assento'], $rows->toArray());

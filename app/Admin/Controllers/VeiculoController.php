@@ -59,6 +59,18 @@ class VeiculoController extends Controller
                 ['text' => 'Editando']
             );
             $grid = Admin::grid(Assento::class, function(Grid $grid) use ($id) {
+                $grid->actions(function ($actions) {
+                    $actions->disableEdit();
+                });
+                $grid->tools(function ($tools) use ($id){
+                    $tools->append('<a href="/admin/assentos/create?veiculo_id='.$id.'" class="btn btn-sm btn-success"><i class="fa fa-save"> Novo</i></a>');
+                });
+                $grid->disableFilter();
+                $grid->disableExport();
+                $grid->disableCreation();
+                $grid->disableRowSelector();
+                $grid->disablePagination();
+                
                 $grid->model()->where('veiculo_id','=',$id)->orderBy('nome');
                 $grid->column('nome','local')->editable();
                 $states = [
@@ -66,14 +78,7 @@ class VeiculoController extends Controller
                     'off' => ['value' => 0, 'text' => 'Não', 'color' => 'danger'],
                 ];
                 $grid->janela()->switch($states);
-                $grid->paginate(20);
-                $grid->disableFilter();
-                $grid->disableExport();
-                $grid->disableRowSelector();
-                $grid->disablePagination();
-                $grid->actions(function ($actions) {
-                    $actions->disableEdit();
-                });
+                
                 
             });
             $tab = new Tab();
@@ -150,39 +155,6 @@ class VeiculoController extends Controller
         });
     }
 
-    public function updateAssento($veiculo_id, $assento_id, Request $request) {
-        $assento = Assento::find($assento_id);
-        $assento->fill($request->all());
-        if($request->get('janela')) {
-            $assento->janela = ($request->get('janela') == 'on');
-        }
-        $assento->save();
-        return new MessageBag([
-            'title'   => 'title...',
-            'message' => 'Assento atualizado',
-        ]);
-    }
-
-    public function deleteAssento($veiculo_id, $assento_id, Request $request) {
-        $assento = Assento::find($assento_id);
-        $assento->delete();
-        return new MessageBag([
-            'title'   => 'title...',
-            'message' => 'Assento excluído',
-        ]);
-    }
-
-    public function createAssento($veiculo_id, Request $request) {
-        $assento = new Assento();
-        $assento->veiculo_id = $veiculo_id;
-        $assento->nome = '##';
-        $assento->janela = true;
-        $assento->save();
-        $success = new MessageBag([
-            'title'   => 'Novo assento cadastrado',
-            //'message' => 'Operação realizada com sucesso',
-        ]);    
-        return back()->with(compact('success'));
-    }
+    
 
 }

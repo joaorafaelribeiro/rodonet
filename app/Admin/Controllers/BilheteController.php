@@ -5,12 +5,14 @@ namespace App\Admin\Controllers;
 use App\Bilhete;
 use App\Pessoa;
 use App\Viagem;
+use App\Assento;
 use Encore\Admin\Form;
 use Encore\Admin\Grid;
 use Encore\Admin\Facades\Admin;
 use Encore\Admin\Layout\Content;
 use App\Http\Controllers\Controller;
 use Encore\Admin\Controllers\ModelForm;
+use Illuminate\Support\Facades\DB;
 
 class BilheteController extends Controller
 {
@@ -81,7 +83,7 @@ class BilheteController extends Controller
                 $viagem = Viagem::find($id);
                 return $viagem->data.' - '.$viagem->origem->nome.' x '.$viagem->destino->nome;
             });
-            $grid->column('assento','Assento');
+            $grid->column('assento.nome','Assento');
             $grid->column('valor','Valor');
         });
     }
@@ -99,17 +101,16 @@ class BilheteController extends Controller
                 $pessoa = Pessoa::find($id);
             
                 if ($pessoa) {
-                    return [$pessoa->id => $pessoa->name];
+                    return [$pessoa->id => $pessoa->cpf.' - '.$pessoa->nome];
                 }
             })->ajax('/api/pessoa');
-            $form->select('viagem_id', 'Viagem')->options(function ($id) {
-                $viagem = Viagem::find($id);
-            
-                if ($viagem) {
-                    return [$viagem->id => $viagem->data.' - '.$viagem->origem->nome.' x '.$viagem->destino->nome];
+            $form->select('viagem_id', 'Viagem')->options(Viagem::disponiveis()->pluck('text','id'))->load('assento_id','/api/assentos');
+            $form->select('assento_id', 'Assento')->options(function ($id) {
+                $assento = Assento::find($id);
+                if ($assento) {
+                    return [$assento->id => $assento->nome];
                 }
-            })->ajax('/api/viagem');
-            $form->text('assento', 'Assento');
+            });
             $form->currency('valor', 'Valor')->symbol('R$');
             $form->hidden('data')->value(now());
             

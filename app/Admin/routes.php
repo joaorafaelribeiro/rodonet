@@ -11,9 +11,9 @@ Route::group([
 ], function (Router $router) {
 
     $router->get('/', 'HomeController@index');
-    $router->put('veiculos/{veiculo_id}/edit/{assento_id}', 'VeiculoController@updateAssento');
-    $router->delete('veiculos/{veiculo_id}/edit/{assento_id}', 'VeiculoController@deleteAssento');
-    $router->get('veiculos/{veiculo_id}/edit/create', 'VeiculoController@createAssento');
+    $router->put('veiculos/{veiculo_id}/edit/{assento_id}', 'AssentoController@updateAssento');
+    $router->delete('veiculos/{veiculo_id}/edit/{assento_id}', 'AssentoController@deleteAssento');
+    $router->resource('assentos', 'AssentoController');
     $router->resource('veiculos', 'VeiculoController');
     $router->resource('motoristas', 'MotoristaController');
     $router->resource('paradas', 'ParadaController');
